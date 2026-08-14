@@ -6,6 +6,8 @@ rem ---------------------------------------------------------------------------
 rem  Builds and launches the Student Report Card Management System.
 rem
 rem  Usage:  start.bat ["C:\Path\To\MySQL Server 8.0"]
+rem
+rem  Set BUILD_ONLY=1 before calling to compile without running.
 rem ---------------------------------------------------------------------------
 
 set "APP=report_card.exe"
@@ -20,27 +22,45 @@ echo   Student Report Card Management System - Launcher
 echo ====================================================
 echo.
 
-rem --- 1. compiler -----------------------------------------------------------
+rem --- 1. find a 64-bit compiler --------------------------------------------
+rem MySQL 8.0 ships 64-bit libraries, so a 32-bit g++ cannot link against them.
+rem Prefer whatever is on PATH, but fall back to known 64-bit install locations
+rem rather than failing when an older 32-bit MinGW shadows it.
+set "CXX="
+
 where g++ >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] g++ was not found on your PATH.
-    echo         Install MinGW-w64 ^(64-bit^) and add its \bin folder to PATH.
+if not errorlevel 1 (
+    for /f "delims=" %%A in ('g++ -dumpmachine 2^>nul') do set "TRIPLE=%%A"
+    echo !TRIPLE! | findstr /i "x86_64" >nul
+    if not errorlevel 1 set "CXX=g++"
+)
+
+if not defined CXX (
+    for %%D in (
+        "%LOCALAPPDATA%\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin"
+        "%LOCALAPPDATA%\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.MSVCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin"
+        "C:\msys64\mingw64\bin"
+        "C:\mingw64\bin"
+        "C:\Program Files\mingw64\bin"
+    ) do (
+        if not defined CXX if exist "%%~D\g++.exe" set "CXX=%%~D\g++.exe"
+    )
+)
+
+if not defined CXX (
+    echo [ERROR] No 64-bit g++ was found.
+    echo.
+    echo         MySQL 8.0 ships 64-bit libraries, so a 32-bit compiler cannot
+    echo         link against them. Install MinGW-w64 with:
+    echo.
+    echo             winget install BrechtSanders.WinLibs.POSIX.UCRT
     echo.
     pause
     exit /b 1
 )
 
-for /f "delims=" %%A in ('g++ -dumpmachine 2^>nul') do set "TRIPLE=%%A"
-echo [1/4] Compiler target : !TRIPLE!
-
-echo !TRIPLE! | findstr /i "x86_64" >nul
-if errorlevel 1 (
-    echo.
-    echo [WARN] This g++ builds 32-bit binaries, but MySQL 8.0 ships 64-bit
-    echo        libraries. Linking will fail with "file format not recognized".
-    echo        Fix: install MinGW-w64 ^(x86_64^) and put it first on PATH.
-    echo.
-)
+for /f "delims=" %%A in ('"!CXX!" -dumpmachine 2^>nul') do set "TRIPLE=%%A"
+echo [1/4] Compiler       : !TRIPLE!
 
 rem --- 2. MySQL headers ------------------------------------------------------
 if not exist "%MYSQL_DIR%\include\mysql.h" (
@@ -54,7 +74,7 @@ if not exist "%MYSQL_DIR%\include\mysql.h" (
 echo [2/4] MySQL headers  : "%MYSQL_DIR%\include"
 
 rem --- 3. optional schema load ----------------------------------------------
-if exist "schema.sql" (
+if not defined BUILD_ONLY if exist "schema.sql" (
     set "LOADSCHEMA="
     set /p "LOADSCHEMA=      Create/verify the database schema first? (y/N): "
     if /i "!LOADSCHEMA!"=="y" (
@@ -69,17 +89,23 @@ if exist "schema.sql" (
 
 rem --- 4. build --------------------------------------------------------------
 echo [3/4] Building %APP% ...
-g++ -std=c++11 -Wall -O2 -I"%MYSQL_DIR%\include" %SOURCES% -o "%APP%" -L"%MYSQL_DIR%\lib" -lmysql
+"!CXX!" -std=c++11 -Wall -O2 -I"%MYSQL_DIR%\include" %SOURCES% -o "%APP%" -L"%MYSQL_DIR%\lib" -lmysql
 if errorlevel 1 (
     echo.
     echo [ERROR] Build failed. See the messages above.
     echo.
-    pause
+    if not defined BUILD_ONLY pause
     exit /b 1
 )
+echo       OK - %APP%
 
 if not exist "libmysql.dll" (
     if exist "%MYSQL_DIR%\lib\libmysql.dll" copy /y "%MYSQL_DIR%\lib\libmysql.dll" . >nul
+)
+
+if defined BUILD_ONLY (
+    echo [4/4] BUILD_ONLY set - not starting.
+    exit /b 0
 )
 
 rem --- 5. run ----------------------------------------------------------------
