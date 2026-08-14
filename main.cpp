@@ -41,7 +41,7 @@ string getGrade(){
  
 };
 
-report(MYSQL* conn){
+void report(MYSQL* conn){
 string rollNo, grade;
 int sub1,sub2,sub3,total;
 float avg;
