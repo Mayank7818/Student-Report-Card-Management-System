@@ -1,0 +1,26 @@
+# Build output
+*.exe
+*.o
+*.obj
+*.out
+*.a
+*.lib
+build/
+bin/
+
+# Runtime dependency — ship it with the installer, never commit it
+libmysql.dll
+*.dll
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS noise
+Thumbs.db
+.DS_Store
+
+# Local credentials — never commit real secrets
+.env
