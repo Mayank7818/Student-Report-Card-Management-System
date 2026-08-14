@@ -12,6 +12,33 @@
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
 </p>
 
+<p align="center">
+  <sub>
+    Turn subject marks into graded, persistent report cards backed by MySQL — with
+    per-subject history, precise floating-point averages, parameterised queries
+    throughout, and a three-layer architecture separating menus, domain rules and
+    persistence.
+  </sub>
+</p>
+
+---
+
+## 📑 Contents
+
+- [About](#-about)
+- [Features](#-features)
+- [Grading Scale](#-grading-scale)
+- [Design Highlights](#-design-highlights)
+- [Tech Stack](#-tech-stack)
+- [Database Setup](#-database-setup)
+- [Configuration](#-configuration)
+- [Build & Run](#-build--run)
+- [Sample Output](#-sample-output)
+- [Project Structure](#-project-structure)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [License](#-license)
+
 ---
 
 ## 📖 About
@@ -262,6 +289,7 @@ Student-Report-Card-Management-System/
 ├── schema.sql      # Database, tables, keys, constraints
 ├── Makefile        # make / make check / make clean
 ├── start.bat       # One-click build & run for Windows
+├── LICENSE         # MIT
 └── .gitignore
 ```
 
@@ -286,6 +314,7 @@ Contributions are welcome. Fork the repository, create a feature branch, and ope
 ## 📜 License
 
 Released under the **MIT License** — free to use, modify, and distribute.
+See [LICENSE](LICENSE) for the full text.
 
 ---
 
